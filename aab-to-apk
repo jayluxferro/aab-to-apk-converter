@@ -1,0 +1,29 @@
+#!/bin/bash
+tmp_dir="/tmp"
+default_apk="universal.apk"
+release_apk="release.apk"
+aab_file="app.aab"
+
+# validate input
+if [ "$#" -ne 1 ]; then
+    echo "Usage: ./aab-to-apk [path_to_aab_file]"
+    exit 1
+fi
+
+# process .aab file
+cp "$1" "$tmp_dir"/"$aab_file"
+
+# convert .aab file to universal file
+./bundletool build-apks --bundle="$tmp_dir"/"$aab_file" --output="$tmp_dir"/app.apks --mode=universal
+
+# unzip app
+mv "$tmp_dir"/app.apks "$tmp_dir"/app.zip
+unzip "$tmp_dir"/app.zip -d "$tmp_dir"
+
+# sign apk
+mv "$tmp_dir"/"$default_apk" ./"$release_apk"
+./sign-apk "$release_apk"
+
+# cleanup
+rm -rf "$tmp_dir"/{app.zip,toc.pb}
+rm -rf "$tmp_dir"/"$aab_file"
